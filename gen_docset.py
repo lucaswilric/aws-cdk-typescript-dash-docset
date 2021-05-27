@@ -8,6 +8,8 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from lxml import html
 
+from pathlib import Path
+
 SOURCE_DOCUMENT_BASE_DIR = "tmp/cdk/api/latest/typescript/"
 TOC_FILE = f"{SOURCE_DOCUMENT_BASE_DIR}/api/toc.html"
 API_TOC_FILE = "tmp/aws-construct-library.html"
@@ -73,6 +75,7 @@ for module_section in module_sections:
     logger.info(f"Parsing {module_path}")
     module_title = module_link.attrib["title"]
     output_path = f"api/{module_title}.html"
+    output_dir = f"api/{module_title}"
     name = module_link.attrib["title"]
     entry_type = "Module"
 
@@ -88,6 +91,9 @@ for module_section in module_sections:
     sql = "INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)"
     db.execute(sql, (name, entry_type, output_path))
 
+    # Make directory for entries in this module
+    Path(DESTINATION_DOCUMENT_BASE_DIR + "/" + output_dir).mkdir(parents=True, exist_ok=True)
+
     # Find entry links
     entries = module_section.xpath("ul/li/a")
     for entry in entries:
@@ -97,33 +103,25 @@ for module_section in module_sections:
 
         entry_title = entry.attrib.get("title")
         entry_file = entry_url.split("#")[0]
+        entry_filename = entry_file.split("/")[-1]
         entry_path = f"{SOURCE_DOCUMENT_BASE_DIR}/api/{entry_file}"
+        entry_output_path = f"{output_dir}/{entry_filename}"
 
         entry_soup = BeautifulSoup(open(entry_path, "r").read(), "html.parser")
         try:
             entry_type = module_map[module_title][entry_title]
         except KeyError:
             entry_type = entry_soup.title.text.split()[0]
-        entry_article_tag = entry_soup.find("article")
-        entry_id = entry_article_tag.attrs["data-uid"]
-        anchor_tag = soup.new_tag(
-            "a",
-            attrs={
-                "name": f"//apple_ref/cpp/{entry_type}/{entry_title}",
-                "class": "dashAnchor",
-                "id": entry_id
-            },
-        )
 
-        article_parent.insert(len(list(article_parent.children)), anchor_tag)
-        article_parent.insert(len(list(article_parent.children)), entry_article_tag)
 
-        for link in article_parent.findAll('a'):
-            if link.get('href') and '#' in link.get('href'):
-                link['href'] = "#" + link['href'].split('#')[-1]
+        # Write the results
+        entry_output_file = open(f"{DESTINATION_DOCUMENT_BASE_DIR}/{entry_output_path}", "w")
+        entry_output_file.write(str(entry_soup))
+        entry_output_file.close
+        logger.info(f"Wrote to {DESTINATION_DOCUMENT_BASE_DIR}/{entry_output_path}")
 
         sql = "INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)"
-        db.execute(sql, (entry_title, entry_type, output_path + "#" + entry_id))
+        db.execute(sql, (name + "/" + entry_title, entry_type, output_dir + "/" + entry_filename))
 
     output_file = open(f"{DESTINATION_DOCUMENT_BASE_DIR}/{output_path}", "w")
     output_file.write(str(soup))
