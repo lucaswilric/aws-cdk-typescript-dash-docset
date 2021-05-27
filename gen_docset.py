@@ -33,6 +33,7 @@ tree = html.fromstring(toc_content)
 
 module_map = defaultdict(dict)
 
+# Build a map of types (grouped by module) to ... archetypes, I guess?
 module_sections = tree.xpath("//div[@id='docsNav']//div[@class='navGroup']")
 for module_section in module_sections:
     module_title = module_section.xpath(
