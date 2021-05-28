@@ -23,6 +23,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           ./gen_docset.sh
+          tar -czvf aws-cdk-ts.docset.tar.gz aws-cdk-ts.docset/
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -31,4 +32,4 @@ jobs:
           prerelease: true
           title: "Draft"
           files: |
-            *.docset
+            aws-cdk-ts.docset.tar.gz
