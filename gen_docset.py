@@ -10,12 +10,11 @@ from lxml import html
 
 from pathlib import Path
 
-SOURCE_DOCUMENT_BASE_DIR = "tmp/cdk/api/latest/typescript/"
+SOURCE_DOCUMENT_BASE_DIR = "tmp/download"
 TOC_FILE = f"{SOURCE_DOCUMENT_BASE_DIR}/api/toc.html"
 API_TOC_FILE = "tmp/aws-construct-library.html"
 DESTINATION_DOCUMENT_BASE_DIR = "aws-cdk-ts.docset/Contents/Resources/Documents"
 DOCSET_DATABASE = "aws-cdk-ts.docset/Contents/Resources/docSet.dsidx"
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

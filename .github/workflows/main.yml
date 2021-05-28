@@ -31,4 +31,4 @@ jobs:
           prerelease: true
           title: "Draft"
           files: |
-            aws-cdk-ts.docset.tar.gz
+            aws-cdk-v*-ts.docset.tar.gz
