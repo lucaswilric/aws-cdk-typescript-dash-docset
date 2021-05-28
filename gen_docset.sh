@@ -1,3 +1,5 @@
+#!/bin/bash
+
 mkdir -p aws-cdk-ts.docset/Contents/Resources/Documents/api
 cp resources/Info.plist aws-cdk-ts.docset/Contents/Info.plist
 cp resources/docSet.dsidx aws-cdk-ts.docset/Contents/Resources/docSet.dsidx
