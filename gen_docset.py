@@ -10,12 +10,10 @@ from lxml import html
 
 from pathlib import Path
 
-SOURCE_DOCUMENT_BASE_DIR = "tmp/cdk/api/latest/typescript/"
+SOURCE_DOCUMENT_BASE_DIR = "tmp/download"
 TOC_FILE = f"{SOURCE_DOCUMENT_BASE_DIR}/api/toc.html"
-API_TOC_FILE = "tmp/aws-construct-library.html"
 DESTINATION_DOCUMENT_BASE_DIR = "aws-cdk-ts.docset/Contents/Resources/Documents"
 DOCSET_DATABASE = "aws-cdk-ts.docset/Contents/Resources/docSet.dsidx"
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -27,45 +25,18 @@ db.isolation_level = None
 db.execute("DELETE FROM searchIndex")
 db.execute("VACUUM")
 
-
-# The TS docs does not have a clear distinction between Constructs, Class, Interface, etc. 
-# So we get that information from the main API doc
-toc_content = open(API_TOC_FILE, "r").read()
-tree = html.fromstring(toc_content)
-
-module_map = defaultdict(dict)
-
-# Build a map of types (grouped by module) to ... archetypes, I guess?
-module_sections = tree.xpath("//div[@id='docsNav']//div[@class='navGroup']")
-for module_section in module_sections:
-    module_title = module_section.xpath(
-        "h3[contains(@class, 'navGroupCategoryTitle')]"
-    )[0].text
-    module_title = "".join(filter(lambda x: x in string.printable, module_title))
-    entries = module_section.xpath(".//a[@class='navItem']")
-    for entry in entries:
-        if entry.text in ["Welcome", "Overview"]:
-            continue
-        entry_type_text = (
-            entry.getparent().getparent().getparent().xpath("./h4")[0].text
-        )
-        if entry_type_text in ["CloudFormation Resources", "Constructs"]:
-            entry_type = "Component"
-        elif entry_type_text in ["Classes"]:
-            entry_type = "Class"
-        elif entry_type_text in ["Structs"]:
-            entry_type = "Struct"
-        elif entry_type_text in ["Enums"]:
-            entry_type = "Enum"
-        elif entry_type_text in ["Interfaces", "CloudFormation Property Types"]:
-            entry_type = "Interface"
-        else:
-            raise Exception(f"Not recognize entry type for '{entry_type_text}'")
-
-        module_map[module_title][entry.text] = entry_type
-
 toc_content = open(TOC_FILE, "r").read()
 tree = html.fromstring(toc_content)
+
+def clean_article(soup):
+    # Get rid of some junk & noise
+    soup.find("header").decompose()
+    soup.find('div', {'class': 'sidenav hide-when-search'}).decompose()
+    for s in soup.select('script'):
+        s.decompose()
+
+    # Get rid of wide margins
+    soup.find('div', {'class': 'article row grid-right'})['class'] = ''
 
 module_sections = tree.xpath("//div[@id='toc']/ul/li")
 for module_section in module_sections:
@@ -82,8 +53,8 @@ for module_section in module_sections:
     soup = BeautifulSoup(
         open(f"{SOURCE_DOCUMENT_BASE_DIR}/{module_path}", "r").read(), "html.parser"
     )
-    # Remove the annoying header
-    soup.find("header").decompose()
+
+    clean_article(soup)
 
     article_tag = soup.find("article")
     article_parent = article_tag.parent
@@ -108,19 +79,9 @@ for module_section in module_sections:
         entry_output_path = f"{output_dir}/{entry_filename}"
 
         entry_soup = BeautifulSoup(open(entry_path, "r").read(), "html.parser")
-        try:
-            entry_type = module_map[module_title][entry_title]
-        except KeyError:
-            entry_type = entry_soup.title.text.split()[0]
+        entry_type = entry_soup.title.text.split()[0]
 
-        # Get rid of some junk & noise
-        entry_soup.find("header").decompose()
-        entry_soup.find('div', {'class': 'sidenav hide-when-search'}).decompose()
-        for s in entry_soup.select('script'):
-            s.decompose()
-
-        # Get rid of wide margins
-        entry_soup.find('div', {'class': 'article row grid-right'})['class'] = ''
+        clean_article(entry_soup)
 
         # Write the results
         entry_output_file = open(f"{DESTINATION_DOCUMENT_BASE_DIR}/{entry_output_path}", "w")

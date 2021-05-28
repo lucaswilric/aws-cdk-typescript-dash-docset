@@ -1,15 +1,24 @@
+#!/bin/bash
+
+CDK_VERSION=1.106.1
+ARCHIVE_NAME=aws-cdk-typescript-docs-${CDK_VERSION}
+
 mkdir -p aws-cdk-ts.docset/Contents/Resources/Documents/api
 cp resources/Info.plist aws-cdk-ts.docset/Contents/Info.plist
 cp resources/docSet.dsidx aws-cdk-ts.docset/Contents/Resources/docSet.dsidx
 
-echo Recursively fetching https://docs.aws.amazon.com/cdk/api/latest/typescript/index.html...
-wget -nH -np -P tmp -q --recursive --wait 0.2 --random-wait https://docs.aws.amazon.com/cdk/api/latest/typescript/index.html
+echo "Getting docs from GitHub..."
+wget https://github.com/aws/aws-cdk/releases/download/v${CDK_VERSION}/${ARCHIVE_NAME}.zip
 
-echo Recursively fetching https://docs.aws.amazon.com/cdk/api/latest/typescript/api/toc.html
-wget -nH -np -P tmp -q --recursive --wait 0.2 --random-wait https://docs.aws.amazon.com/cdk/api/latest/typescript/api/toc.html
+mkdir -p tmp
+unzip -qqd tmp/download ${ARCHIVE_NAME}.zip
 
-wget https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html -O tmp/aws-construct-library.html
-
-cp -r tmp/cdk/api/latest/typescript/{fonts,styles} aws-cdk-ts.docset/Contents/Resources/Documents
+cp -r tmp/download/{fonts,styles} aws-cdk-ts.docset/Contents/Resources/Documents
 
 python gen_docset.py
+
+tar -czf aws-cdk-v${CDK_VERSION}-ts.docset.tar.gz aws-cdk-ts.docset/
+
+# Clean up
+rm *.zip
+rm -rf tmp/download
