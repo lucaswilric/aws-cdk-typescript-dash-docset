@@ -15,3 +15,7 @@ cp -r tmp/cdk/api/latest/typescript/{fonts,styles} aws-cdk-ts.docset/Contents/Re
 python gen_docset.py
 
 tar -czf aws-cdk-v${CDK_VERSION}-ts.docset.tar.gz aws-cdk-ts.docset/
+
+# Clean up
+rm *.zip
+rm -rf tmp/download
