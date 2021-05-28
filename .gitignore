@@ -1,2 +1,3 @@
 aws-cdk-ts.docset/
 tmp
+*.tar.gz
