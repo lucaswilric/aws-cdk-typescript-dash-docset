@@ -29,12 +29,16 @@ jobs:
           python-version: '3.9.x'
 
       # Make the docset
-      - name: Install pip dependencies
+      - name: Build docset
         run: |
           pip install -r requirements.txt
           ./gen_docset.sh
 
-      - name: Release Drafter
-        uses: release-drafter/release-drafter@v5.15.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Draft"
+          files: |
+            *.docset
