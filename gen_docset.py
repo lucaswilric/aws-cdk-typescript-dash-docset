@@ -53,8 +53,8 @@ for module_section in module_sections:
     soup = BeautifulSoup(
         open(f"{SOURCE_DOCUMENT_BASE_DIR}/{module_path}", "r").read(), "html.parser"
     )
-    # Remove the annoying header
-    soup.find("header").decompose()
+
+    clean_article(soup)
 
     article_tag = soup.find("article")
     article_parent = article_tag.parent
@@ -81,14 +81,7 @@ for module_section in module_sections:
         entry_soup = BeautifulSoup(open(entry_path, "r").read(), "html.parser")
         entry_type = entry_soup.title.text.split()[0]
 
-        # Get rid of some junk & noise
-        entry_soup.find("header").decompose()
-        entry_soup.find('div', {'class': 'sidenav hide-when-search'}).decompose()
-        for s in entry_soup.select('script'):
-            s.decompose()
-
-        # Get rid of wide margins
-        entry_soup.find('div', {'class': 'article row grid-right'})['class'] = ''
+        clean_article(entry_soup)
 
         # Write the results
         entry_output_file = open(f"{DESTINATION_DOCUMENT_BASE_DIR}/{entry_output_path}", "w")
