@@ -13,3 +13,5 @@ wget https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html 
 cp -r tmp/cdk/api/latest/typescript/{fonts,styles} aws-cdk-ts.docset/Contents/Resources/Documents
 
 python gen_docset.py
+
+tar -czf aws-cdk-v${CDK_VERSION}-ts.docset.tar.gz aws-cdk-ts.docset/
